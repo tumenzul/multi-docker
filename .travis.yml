@@ -1,0 +1,22 @@
+sudo: required
+services:
+    - docker
+
+before_install:
+    - docker build -t tumenzul/react_test -f ./client/Dockerfile.dev ./client
+
+script:
+    - docker run tumenzul/react_test npm test -- --coverage
+
+after_success:
+    - docker build -t tumenzul/multi-client ./client
+    - docker build -t tumenzul/multi-nginx ./nginx
+    - docker build -t tumenzul/multi-server ./server
+    - docker build -t tumenzul/multi-worker ./worker
+    #  Log in to the docker CLI
+    - echo "$DOCKER_PASSWORD" | docker login -u "$DOCKER_ID" --password-stdin
+    # take those images and push them to docker hub
+    - docker push tumenzul/multi-client
+    - docker push tumenzul/multi-nginx
+    - docker push tumenzul/multi-server
+    - docker push tumenzul/multi-worker
